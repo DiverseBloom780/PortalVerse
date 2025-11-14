@@ -1,6 +1,15 @@
 import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  portalStates,
+  virtualToys,
+  toyUpgrades,
+  PortalState,
+  InsertVirtualToy,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -340,12 +349,4 @@ export async function updatePortalState(
   }
 }
 
-// Import statements needed at top of file
-import { eq, and } from "drizzle-orm";
-import {
-  portalStates,
-  virtualToys,
-  toyUpgrades,
-  PortalState,
-  InsertVirtualToy,
-} from "../drizzle/schema";
+
