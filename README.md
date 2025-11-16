@@ -1,156 +1,228 @@
-# Multi-Platform Toy Pad Emulator
+# PortalVerse
 
-## 🎮 Project Overview
+**PortalVerse** is a comprehensive offline Toy Pad emulator for Raspberry Pi Zero that supports three major toys-to-life gaming platforms:
 
-The **Multi-Platform Toy Pad Emulator** is a comprehensive, offline solution that allows a **Raspberry Pi Zero W** to emulate the physical Toy Pad/Portal devices for three major "toys-to-life" gaming platforms:
+- **Lego Dimensions**
+- **Skylanders**
+- **Disney Infinity**
 
-1.  🧱 **Lego Dimensions**
-2.  🐉 **Skylanders** (Portal of Power)
-3.  🚀 **Disney Infinity** (Disney Infinity Base)
+Run all three portal emulators simultaneously on a single Raspberry Pi Zero, with a web interface accessible from any device on your local network.
 
-The emulator operates entirely **offline** and connects directly to the game console/PC via a single USB cable (USB Gadget Mode). A separate, responsive web interface runs on any local network device (PC, tablet, phone) to manage virtual toys and portal settings.
+## Features
 
-### Key Components
+✅ **Multi-Platform Support** - Emulate Lego Dimensions, Skylanders, and Disney Infinity portals simultaneously
 
-* **Portal Emulation:** The Raspberry Pi acts as a USB HID device, mimicking the official portals with the correct Vendor/Product IDs and communication protocols.
-* **Character Emulation:** Virtual toy/figure data is stored in a local database and simulated by the emulator when a figure is "placed" via the web interface.
-* **Remote Web Interface:** A modern React application for real-time portal management, toy inventory, and status monitoring over the local network (LAN only).
+✅ **Offline Operation** - Works completely offline after initial setup, no internet required
+
+✅ **Headless Backend** - Raspberry Pi runs without display, controlled via web interface from another device
+
+✅ **Virtual Toy Management** - Add, edit, and manage virtual toys/characters with upgrade tracking
+
+✅ **Real-time Portal Control** - Monitor and control portal LED colors and figure placement in real-time
+
+✅ **USB HID Emulation** - Emulates authentic USB HID devices that game consoles recognize
+
+✅ **Database Persistence** - All toy data and upgrades saved to local database
+
+## Quick Start
+
+### Hardware Requirements
+
+- Raspberry Pi Zero W (or Pi 4B with USB splitter)
+- Micro SD card (2GB+)
+- USB Type-A to Micro-USB cable
+- Network connection (WiFi or Ethernet)
+
+### Installation
+
+1. **Flash Raspberry Pi OS (Legacy, 32-bit - Bullseye)**
+   - Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+   - Enable SSH and configure WiFi
+
+2. **Update Boot Configuration**
+   ```bash
+   sudo nano /boot/firmware/config.txt
+   ```
+   Add at the end:
+   ```ini
+   [all]
+   dtoverlay=dwc2
+   
+   [cm5]
+   dtoverlay=dwc2,dr_mode=peripheral
+   ```
+   Save and reboot: `sudo reboot`
+
+3. **Install PortalVerse**
+   ```bash
+   cd ~
+   git clone https://github.com/yourusername/PortalVerse.git
+   cd PortalVerse
+   pnpm install
+   pnpm db:push
+   ```
+
+4. **Start the Server**
+   ```bash
+   pnpm start
+   ```
+
+5. **Access Web Interface**
+   Open browser and navigate to: `http://toypad-pi.local:3000`
+
+## Architecture
+
+### Backend (Raspberry Pi Zero)
+- Node.js 11+ with Express 4 and tRPC 11
+- USB HID Gadget emulation via `/dev/hidg0`, `/dev/hidg1`, `/dev/hidg2`
+- MySQL/TiDB database with Drizzle ORM
+- Character data provider for toy lookups
+
+### Frontend (Remote Device)
+- React 19 with Vite
+- Tailwind CSS 4 for responsive design
+- shadcn/ui components
+- LAN-only access (no internet required)
+
+## Project Structure
+
+```
+PortalVerse/
+├── client/                    # React frontend
+│   ├── src/
+│   │   ├── pages/            # Page components
+│   │   ├── components/       # Reusable UI components
+│   │   └── App.tsx
+│   └── public/               # Static assets
+│
+├── server/                    # Node.js backend
+│   ├── routers.ts            # tRPC procedures
+│   ├── db.ts                 # Database queries
+│   ├── usb-emulator.ts       # USB HID emulation
+│   ├── platforms/            # Platform handlers
+│   │   ├── lego-dimensions.ts
+│   │   ├── skylanders.ts
+│   │   └── disney-infinity.ts
+│   └── _core/                # Framework code
+│
+├── drizzle/                  # Database schema
+│   └── schema.ts
+│
+├── setup/                    # Installation scripts
+│   ├── install-pi-zero.sh
+│   ├── usb-gadget-setup.sh
+│   ├── config.txt.additions
+│   ├── toypad-emulator.service
+│   └── toypad-usb-gadget.service
+│
+└── docs/                     # Documentation
+    ├── SETUP.md
+    ├── USAGE.md
+    ├── PROTOCOLS.md
+    └── TROUBLESHOOTING.md
+```
+
+## USB Device Specifications
+
+| Platform | Vendor ID | Product ID | Report Size |
+|----------|-----------|-----------|-------------|
+| Lego Dimensions | 0x0E6F | 0xF446 | 32 bytes |
+| Skylanders | 0x1430 | 0x0150 | 32 bytes |
+| Disney Infinity | 0x0E6F | 0x0129 | 32 bytes |
+
+## Database Schema
+
+**Users** - Authentication and user management
+
+**Portal States** - Current state of each emulated portal (LED color, active figures, etc.)
+
+**Virtual Toys** - All emulated toys/characters/figures with platform-specific metadata
+
+**Toy Upgrades** - Tracks upgrades and modifications for toys
+
+**Toy Placements** - History of when figures are placed/removed from portal
+
+## Configuration
+
+### Environment Variables
+
+```bash
+DATABASE_URL=mysql://user:password@localhost/portalverse
+VITE_APP_TITLE=PortalVerse
+VITE_APP_LOGO=/logo.svg
+```
+
+### Portal Settings
+
+Configure via web interface:
+- Platform selection (Lego Dimensions, Skylanders, Disney Infinity)
+- LED colors
+- Figure placement
+- Upgrade management
+
+## Documentation
+
+- **[SETUP.md](SETUP.md)** - Detailed installation guide for Raspberry Pi Zero
+- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** - Technical architecture and implementation details
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and protocol specifications
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
+
+## Troubleshooting
+
+### /dev/hidg* files don't exist
+
+**Problem**: USB gadget device files not created after boot
+
+**Solution**:
+1. Verify `dtoverlay=dwc2` is in `/boot/firmware/config.txt`
+2. Ensure you're using Bullseye (not Bookworm)
+3. Reboot the Pi: `sudo reboot`
+4. Check: `ls -la /dev/hidg*`
+
+### Server won't start
+
+**Problem**: Module not found or database connection errors
+
+**Solution**:
+```bash
+cd ~/PortalVerse
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+pnpm db:push
+pnpm start
+```
+
+### Can't connect to web interface
+
+**Problem**: Browser shows "Connection refused"
+
+**Solution**:
+1. Verify server is running: `ps aux | grep node`
+2. Check firewall: `sudo ufw allow 3000`
+3. Try IP address instead of hostname: `http://<pi-ip>:3000`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+MIT License - see LICENSE file for details
+
+## References
+
+- [LD-ToyPad-Emulator](https://github.com/Berny23/LD-ToyPad-Emulator)
+- [Skylanders Reverse Engineering](https://marijnkneppers.dev/posts/reverse-engineering-skylanders-toys-to-life-mechanics/)
+- [Disney Infinity USB Library](https://github.com/techbelly/di-usb-library)
+- [Linux USB Gadget API](https://www.kernel.org/doc/html/latest/usb/gadget.html)
+
+## Support
+
+For issues, questions, or suggestions:
+1. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+2. Review server logs: `sudo journalctl -u toypad-emulator.service -f`
+3. Open an [Issue](https://github.com/yourusername/PortalVerse/issues)
 
 ---
 
-## ✨ Key Features
-
-| Feature | Description |
-| :--- | :--- |
-| **Multi-Platform Support** | Simultaneous emulation of Lego Dimensions, Skylanders, and Disney Infinity. |
-| **Offline Operation** | Requires no internet access after initial setup. Web UI is LAN-only. |
-| **Toy/Character Management** | Add, remove, and manage virtual toys, including Skylanders upgrades and LD vehicle modifications. |
-| **Data Persistence** | All toy data, upgrade progress, and portal state are saved to a local **SQLite** database. |
-| **Headless Operation** | The Raspberry Pi Zero runs without a display. Management is done entirely via the remote web interface. |
-| **Low-Latency HID** | Meets the demanding performance targets for gaming with sub-20ms portal response times via USB Interrupt Transfers. |
-
----
-
-## 💻 Technical Stack
-
-### Backend (Raspberry Pi Zero W)
-
-| Component | Technology | Role |
-| :--- | :--- | :--- |
-| **Core** | Node.js 11+ with Express 4 | Application framework and server. |
-| **API** | tRPC 11 | Type-safe API layer for communication with the frontend. |
-| **USB Emulation** | Linux USB Gadget API (`/dev/hidg*`) | Kernel-level emulation of HID devices over USB. |
-| **Database** | SQLite (or MySQL/TiDB) | Lightweight, reliable local data storage. |
-| **ORM** | Drizzle ORM | Type-safe and modern database interaction. |
-| **OS** | Raspberry Pi OS (Bullseye, 32-bit) | Legacy version for reliable USB Gadget Mode support. |
-
-### Frontend (Remote Device - PC/Tablet)
-
-| Component | Technology | Role |
-| :--- | :--- | :--- |
-| **Framework** | React 19 with Vite | High-performance, modern user interface. |
-| **Styling** | Tailwind CSS 4 | Responsive, utility-first styling. |
-| **Components** | shadcn/ui | Consistent, accessible UI components. |
-| **Communication** | tRPC (HTTP/WebSocket) | Real-time status and control over the local network. |
-
----
-
-## 📐 Architecture Overview
-
-The system is split into two layers: the Kernel-level **USB Gadget Layer** handling raw HID communication, and the **Application Layer** running the core Node.js logic and web server.
-
-### 1. USB Gadget Layer (Kernel)
-The Raspberry Pi is configured in USB Gadget Mode to appear as three separate HID devices to the connected Game Console/PC:
-
-$$
-\text{Game Console/PC} \xrightarrow{\text{USB}} \text{Raspberry Pi (USB Gadget Mode)} \\
-\begin{array}{l}
-\quad \vdash \text{/dev/hidg0 (Lego Dimensions Portal: 0x0E6F:0xF446)} \\
-\quad \vdash \text{/dev/hidg1 (Skylanders Portal: 0x1430:0x0150)} \\
-\quad \sqcup \text{/dev/hidg2 (Disney Infinity Base: 0x0E6F:0x0129)}
-\end{array}
-$$
-
-### 2. Application Layer (Node.js Backend)
-
-The Node.js server manages state, processes commands, and serves the API.
-
-
-
-* **Portal State Manager:** Tracks the active platform, LED colors, and current figure placements, persisting this data in the database.
-* **USB HID Emulator:** Contains platform-specific handlers for processing incoming HID reports (commands) and generating outgoing HID reports (responses/data).
-* **Character Data Provider:** A unified service that looks up platform-specific toy data, NFC data, and upgrade status from the database.
-* **tRPC API Server:** Exposes a strongly typed API for the remote web frontend to manage the emulator settings and toy inventory over the LAN.
-
----
-
-## 💾 Database Schema
-
-The Drizzle ORM is used to define a type-safe schema, centralizing all platform data.
-
-| Table | Purpose | Key Fields |
-| :--- | :--- | :--- |
-| `users` | User authentication and role management (for Manus OAuth integration). | `id`, `openId`, `name`, `role` |
-| `portal_state` | Real-time configuration for the active portal. | `userId`, `platform`, `isActive`, `ledColor`, `figuresOnPortal` (JSON) |
-| `virtual_toys` | Inventory of all virtual toys across all platforms. | `userId`, `platform`, `toyId`, `toyType`, `nfcData`, `metadata` (JSON) |
-| `toy_upgrades` | Skylanders/Infinity upgrade and progress data. | `toyId` (FK), `upgradeKey`, `upgradeValue` |
-| `toy_placements` | History/current status of figures placed on the virtual portal. | `portalStateId` (FK), `toyId` (FK), `placedAt`, `removedAt` |
-
----
-
-## 🛠️ Implementation Phases
-
-The project follows a staged development approach, starting with core infrastructure and adding platform support incrementally.
-
-### Phase 1: Core Infrastructure
-* Database schema and migrations.
-* USB gadget initialization and basic HID framework.
-* tRPC API setup and Character Data Provider foundation.
-
-### Phase 2: Lego Dimensions Support
-* LD protocol implementation (Query, Write, LED Control).
-* Integration with the Toy Database for character data lookup.
-
-### Phase 3: Skylanders Support
-* Skylanders protocol and command character parsing.
-* NFC data simulation and Upgrade Tracking implementation.
-
-### Phase 4: Disney Infinity Support
-* Disney Infinity protocol and NFC reader simulation.
-* LED color management and Power Disc support.
-
-### Phase 5: Web Interface
-* Development of the Portal Manager UI, Toy Inventory, and real-time status display.
-
-### Phase 6: Pi Setup & Automation
-* Creation of installation scripts (`install-pi-zero.sh`), USB gadget configuration, and `systemd` service for headless, automatic startup.
-
----
-
-## 🔒 Security and Performance
-
-### Security Considerations
-
-* **LAN-Only Access:** The tRPC API is deliberately not exposed to the public internet.
-* **Data Isolation:** Each user's virtual toy data is isolated via the `userId` foreign key.
-* **Safe DB Access:** Parameterized queries via Drizzle ORM prevent SQL injection attacks.
-
-### Performance Targets
-
-The system is optimized for a low-power device (Pi Zero) while maintaining gaming-level performance:
-
-* **Portal Response Time:** $<20\text{ms}$ (to support the $\sim50\text{Hz}$ game polling rate).
-* **Character Lookup Time:** $<5\text{ms}$.
-* **USB Latency:** $<10\text{ms}$ for HID transfers.
-* **Memory Usage:** Targeted $<200\text{MB}$ on Raspberry Pi Zero.
-
----
-
-## 🚀 Future Enhancements (Roadmap)
-
-1.  **Wireless Toy Placement:** Implement Bluetooth/WiFi for physical toy detection.
-2.  **Cloud Backup:** Optional cloud sync for secure, off-site toy data backup.
-3.  **Custom Toy Creation:** Enable users to define and customize new virtual toys.
-4.  **Figure Scanning:** Add support for QR code or barcode scanning to import toy IDs.
-
-***
+**PortalVerse** - Bring your toy collections to life, offline and on your terms.
