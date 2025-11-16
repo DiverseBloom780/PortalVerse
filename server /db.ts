@@ -169,13 +169,17 @@ export async function getUserToys(
   }
 
   try {
-    let query = db.select().from(virtualToys).where(eq(virtualToys.userId, userId));
-
     if (platform) {
-      query = query.where(eq(virtualToys.platform, platform));
+      return await db
+        .select()
+        .from(virtualToys)
+        .where(and(eq(virtualToys.userId, userId), eq(virtualToys.platform, platform)));
+    } else {
+      return await db
+        .select()
+        .from(virtualToys)
+        .where(eq(virtualToys.userId, userId));
     }
-
-    return await query;
   } catch (error) {
     console.error("[Database] Failed to get toys:", error);
     throw error;
