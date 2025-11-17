@@ -159,8 +159,8 @@ async function handleLDRead(
     let offset = 3;
     for (const upgrade of upgrades.slice(0, 10)) {
       if (offset + 2 > 32) break;
-      const key = parseInt(upgrade.upgradeKey, 16) || 0;
-      const value = parseInt(upgrade.upgradeValue, 16) || 0;
+      const key = parseInt(upgrade.upgradeKey || "0", 16) || 0;
+      const value = parseInt(upgrade.upgradeValue || "0", 16) || 0;
       response[offset++] = key;
       response[offset++] = value;
     }
