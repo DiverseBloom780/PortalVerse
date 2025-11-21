@@ -1,0 +1,18 @@
+[Unit]
+Description=PortalVerse - Multi-Platform Toy Pad Emulator
+Documentation=https://github.com/yourusername/PortalVerse
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/PortalVerse
+Environment="NODE_ENV=production"
+ExecStart=/usr/local/bin/pnpm start
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
