@@ -1,50 +1,92 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
 <html>
 <head>
   <title>Portal</title>
   <style>
     body { font-family: sans-serif; margin: 20px; }
-    img { height: 80px; }
-    .franchise { margin-bottom: 30px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .card { border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
+    .section { margin-bottom: 28px; }
+    .small { color: #666; font-size: 0.9em; }
+    button { margin-top: 8px; }
   </style>
 </head>
 <body>
-  <h1>Portal Figures</h1>
+  <h1>Figures</h1>
 
-  <div class="franchise">
-    <h2>Disney Infinity</h2>
-    <div id="infinity"></div>
-  </div>
-
-  <div class="franchise">
+  <div class="section">
     <h2>Skylanders</h2>
-    <div id="skylanders"></div>
+    <div id="skylanders" class="grid"></div>
   </div>
 
-  <div class="franchise">
+  <div class="section">
     <h2>LEGO Dimensions</h2>
-    <div id="dimensions"></div>
+    <div id="dimensions" class="grid"></div>
+  </div>
+
+  <div class="section">
+    <h2>Disney Infinity</h2>
+    <div id="infinity" class="grid"></div>
+  </div>
+
+  <div class="section">
+    <h2>Active selection</h2>
+    <pre id="active" class="small">{}</pre>
   </div>
 
   <script>
-    async function loadFigures(endpoint, containerId) {
-      const res = await fetch(endpoint);
-      const data = await res.json();
-      const container = document.getElementById(containerId);
-      container.innerHTML = "";
-      data.forEach(fig => {
-        container.innerHTML += `
-          <div>
-            <strong>${fig.name}</strong><br>
-            <img src="${fig.image}" alt="${fig.name}">
-          </div>
-        `;
+    async function loadFranchise(name, containerId, renderFn) {
+      const res = await fetch(`/${name}`);
+      const items = await res.json();
+      const el = document.getElementById(containerId);
+      el.innerHTML = "";
+      items.forEach(item => el.innerHTML += renderFn(item, name));
+    }
+    function renderSkylander(s) {
+      return `
+        <div class="card">
+          <strong>${s.name}</strong><div class="small">${s.series}</div>
+          <div>Element: ${s.element} | Role: ${s.role}</div>
+          <div class="small">Abilities: ${s.abilities}</div>
+          <button onclick="setActive('skylanders', ${s.id})">Set active</button>
+        </div>`;
+    }
+    function renderDimensions(d) {
+      return `
+        <div class="card">
+          <strong>${d.name}</strong><div class="small">${d.world || ''}</div>
+          <div class="small">Abilities: ${d.abilities || ''}</div>
+          <button onclick="setActive('dimensions', ${d.id})">Set active</button>
+        </div>`;
+    }
+    function renderInfinity(i) {
+      return `
+        <div class="card">
+          <strong>${i.name}</strong><div class="small">${i.series || ''}</div>
+          <div class="small">${i.type || ''}</div>
+          <div class="small">Abilities: ${i.abilities || ''}</div>
+          <button onclick="setActive('infinity', ${i.id})">Set active</button>
+        </div>`;
+    }
+    async function setActive(franchise, id) {
+      await fetch('/active/set', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({franchise, id})
       });
+      refreshActive();
+    }
+    async function refreshActive() {
+      const res = await fetch('/active');
+      const data = await res.json();
+      document.getElementById('active').textContent = JSON.stringify(data, null, 2);
     }
 
-    loadFigures("/infinity", "infinity");
-    loadFigures("/skylanders", "skylanders");
-    loadFigures("/dimensions", "dimensions");
+    loadFranchise('skylanders', 'skylanders', (s)=>renderSkylander(s));
+    loadFranchise('dimensions', 'dimensions', (d)=>renderDimensions(d));
+    loadFranchise('infinity', 'infinity', (i)=>renderInfinity(i));
+    refreshActive();
   </script>
 </body>
 </html>
