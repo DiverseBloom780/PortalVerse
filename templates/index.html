@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Portal</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    img { height: 80px; }
+    .franchise { margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <h1>Portal Figures</h1>
+
+  <div class="franchise">
+    <h2>Disney Infinity</h2>
+    <div id="infinity"></div>
+  </div>
+
+  <div class="franchise">
+    <h2>Skylanders</h2>
+    <div id="skylanders"></div>
+  </div>
+
+  <div class="franchise">
+    <h2>LEGO Dimensions</h2>
+    <div id="dimensions"></div>
+  </div>
+
+  <script>
+    async function loadFigures(endpoint, containerId) {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      data.forEach(fig => {
+        container.innerHTML += `
+          <div>
+            <strong>${fig.name}</strong><br>
+            <img src="${fig.image}" alt="${fig.name}">
+          </div>
+        `;
+      });
+    }
+
+    loadFigures("/infinity", "infinity");
+    loadFigures("/skylanders", "skylanders");
+    loadFigures("/dimensions", "dimensions");
+  </script>
+</body>
+</html>
