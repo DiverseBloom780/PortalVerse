@@ -122,42 +122,21 @@ Run all three portal emulators simultaneously on a single Raspberry Pi Zero W, w
 ## Project Structure
 
 ```
-PortalVerse/
-├── client/                    # React frontend
-│   ├── src/
-│   │   ├── pages/            # Page components
-│   │   ├── components/       # Portal UI components
-│   │   └── App.tsx
-│   └── public/               # Static assets
-│
-├── server/                    # Node.js backend
-│   ├── routers/              # tRPC procedures
-│   │   ├── portal.ts
-│   │   ├── toys.ts
-│   │   └── characters.ts
-│   ├── platforms/            # Platform handlers
-│   │   ├── lego-dimensions.ts
-│   │   ├── skylanders.ts
-│   │   └── disney-infinity.ts
-│   ├── db.ts                 # Database queries
-│   ├── usb-emulator.ts       # USB HID emulation
-│   ├── character-database.ts # Character data
-│   └── routers.ts            # Main router
-│
-├── drizzle/                  # Database schema
-│   └── schema.ts
-│
-├── setup/                    # Installation scripts
-│   ├── install-pi-zero.sh
-│   ├── portalverse.service
-│   └── config.txt.additions
-│
-├── docs/                     # Documentation
-│   ├── WIFI_SETUP.md
-│   ├── SETUP.md
-│   └── PROTOCOLS.md
-│
-└── README.md
+portal/
+├── app.py
+├── requirements.txt   ← put it here
+├── data/
+│   ├── skylanders.json
+│   ├── infinity.json
+│   └── dimensions.json
+├── static/
+│   └── images/
+│       ├── skylanders/
+│       ├── infinity/
+│       └── dimensions/
+└── templates/
+    └── index.html
+
 ```
 
 ## Documentation
