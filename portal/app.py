@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, jsonify, request, render_template
 import json, os, tempfile
 
@@ -6,12 +5,12 @@ app = Flask(__name__)
 DATA_DIR = "data"
 
 FRANCHISES = {
-    "dimensions": "dimensions_charactermap.json",
     "skylanders": "skylanders.json",
-    "infinity":   "infinity.json",
+    "infinity": "infinity.json",
+    "dimensions": "dimensions.json"
 }
 
-ACTIVE_FILE = os.path.join(DATA_DIR, "active.json")  # {"franchise": "skylanders", "id": 1}
+ACTIVE_FILE = os.path.join(DATA_DIR, "active.json")
 
 def load_json(filename):
     path = os.path.join(DATA_DIR, filename)
@@ -21,7 +20,6 @@ def load_json(filename):
         return json.load(f)
 
 def save_json(filename, data):
-    # Atomic write to avoid corruption on Pi Zero
     path = os.path.join(DATA_DIR, filename)
     fd, tmp = tempfile.mkstemp(dir=DATA_DIR)
     with os.fdopen(fd, "w") as f:
@@ -40,57 +38,36 @@ def save_active(active):
         json.dump(active, f, indent=2)
     os.replace(tmp, ACTIVE_FILE)
 
-def get_file(franchise):
-    fname = FRANCHISES.get(franchise)
-    if not fname:
-        return None
-    return fname
-
-# ----- Generic routes -----
-
 @app.route("/")
 def index():
     return render_template("index.html")
 
 @app.route("/<franchise>", methods=["GET"])
 def list_items(franchise):
-    fname = get_file(franchise)
-    if not fname:
+    if franchise not in FRANCHISES:
         return jsonify({"status": "error", "message": "Unknown franchise"}), 404
-    return jsonify(load_json(fname))
+    return jsonify(load_json(FRANCHISES[franchise]))
 
 @app.route("/<franchise>/add", methods=["POST"])
 def add_item(franchise):
-    fname = get_file(franchise)
-    if not fname:
+    if franchise not in FRANCHISES:
         return jsonify({"status": "error", "message": "Unknown franchise"}), 404
-    items = load_json(fname)
+    items = load_json(FRANCHISES[franchise])
     new_item = request.json
-    # Minimal validation
-    if not isinstance(new_item, dict) or "id" not in new_item or "name" not in new_item:
-        return jsonify({"status": "error", "message": "Invalid payload"}), 400
-    # Prevent duplicate IDs
-    if any(it.get("id") == new_item["id"] for it in items):
-        return jsonify({"status": "error", "message": "ID already exists"}), 409
     items.append(new_item)
-    save_json(fname, items)
+    save_json(FRANCHISES[franchise], items)
     return jsonify({"status": "ok", "items": items})
 
 @app.route("/<franchise>/swap", methods=["POST"])
 def swap_item(franchise):
-    fname = get_file(franchise)
-    if not fname:
+    if franchise not in FRANCHISES:
         return jsonify({"status": "error", "message": "Unknown franchise"}), 404
-    items = load_json(fname)
-    payload = request.json  # {"id": ..., "new": {...}}
-    target_id = payload.get("id")
-    new_obj = payload.get("new")
-    if target_id is None or not isinstance(new_obj, dict):
-        return jsonify({"status": "error", "message": "Invalid payload"}), 400
+    items = load_json(FRANCHISES[franchise])
+    payload = request.json  # expects {"id": ..., "new": {...}}
     for i, item in enumerate(items):
-        if item.get("id") == target_id:
-            items[i] = new_obj
-            save_json(fname, items)
+        if item.get("id") == payload.get("id"):
+            items[i] = payload["new"]
+            save_json(FRANCHISES[franchise], items)
             return jsonify({"status": "ok", "items": items})
     return jsonify({"status": "error", "message": "Item not found"}), 404
 
@@ -99,10 +76,9 @@ def set_active():
     payload = request.json  # {"franchise": "skylanders", "id": 1}
     franchise = payload.get("franchise")
     target_id = payload.get("id")
-    fname = get_file(franchise)
-    if not fname:
+    if franchise not in FRANCHISES:
         return jsonify({"status": "error", "message": "Unknown franchise"}), 404
-    items = load_json(fname)
+    items = load_json(FRANCHISES[franchise])
     if not any(it.get("id") == target_id for it in items):
         return jsonify({"status": "error", "message": "ID not found"}), 404
     save_active({"franchise": franchise, "id": target_id})
