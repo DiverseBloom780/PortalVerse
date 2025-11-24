@@ -82,7 +82,7 @@ Run all three portal emulators simultaneously on a single Raspberry Pi Zero W, w
    cd ~
    git clone https://github.com/DiverseBloom780/PortalVerse.git
    cd PortalVerse
-   npm install -g pnpm
+   sudo npm install -g pnpm
    pnpm install
    pnpm db:push
    ```
