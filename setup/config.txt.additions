@@ -1,0 +1,21 @@
+# ========================================================
+# USB Gadget Configuration for Toy Pad Emulator
+# Add these lines to /boot/firmware/config.txt on Raspberry Pi
+# ========================================================
+
+# Enable USB OTG (On-The-Go) mode for all Raspberry Pi models
+# This allows the Pi to act as a USB device (not just a host)
+[all]
+dtoverlay=dwc2
+
+# For Compute Module 5 specifically, set DWC2 to peripheral mode
+[cm5]
+dtoverlay=dwc2,dr_mode=peripheral
+
+# ========================================================
+# IMPORTANT: After adding these lines:
+# 1. Save the file
+# 2. Reboot the Raspberry Pi: sudo reboot
+# 3. Run the USB gadget setup script: sudo bash setup/usb-gadget-setup.sh
+# 4. Verify /dev/hidg0, /dev/hidg1, /dev/hidg2 exist
+# ========================================================
